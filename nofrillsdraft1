@@ -1,0 +1,47 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © TradingView
+
+//@version=5
+strategy("Rolling VWAP", "RVWAP", true)
+
+// Rolling VWAP
+// v3, 2022.07.24
+
+// This code was written using the recommendations from the Pine Script™ User Manual's Style Guide:
+//   https://www.tradingview.com/pine-script-docs/en/v5/writing/Style_guide.html
+
+
+import PineCoders/ConditionalAverages/1 as pc
+
+
+
+// ———————————————————— Constants and Inputs {
+
+// ————— Constants
+int MS_IN_MIN   = 60 * 1000
+int MS_IN_HOUR  = MS_IN_MIN  * 60
+int MS_IN_DAY   = MS_IN_HOUR * 24
+
+string TT_SRC     = "The source used to calculate the VWAP. The default is the average of the high, low and close prices."
+string TT_WINDOW  = "By default, the time period used to calculate the RVWAP automatically adjusts with the chart's timeframe.
+  Check this to use a fixed-size time period instead, which you define with the following three values."
+string TT_MINBARS = "The minimum number of last values to keep in the moving window, even if these values are outside the time period.
+  This avoids situations where a large time gap between two bars would cause the time window to be empty."
+string TT_STDEV   = "The multiplier for the standard deviation bands offset above and below the RVWAP. Example: 1.0 is 100% of the offset value. 
+  \n\nNOTE: A value of 0.0 will hide the bands."
+string TT_TABLE   = "Displays the time period of the rolling window."
+
+
+// ————— Inputs
+float   srcInput                = input.source(hlc3, "Source", tooltip = TT_SRC)
+
+string  GRP2                    = '═══════════   Time Period   ═══════════'
+bool    fixedTfInput            = input.bool(false,         "Use a fixed time period", group = GRP2, tooltip = TT_WINDOW)
+int     daysInput               = input.int(1,              "Days",                    group = GRP2, minval = 0, maxval = 90) * MS_IN_DAY
+int     hoursInput              = input.int(0,              "Hours",                   group = GRP2, minval = 0, maxval = 23) * MS_IN_HOUR
+int     minsInput               = input.int(0,              "Minutes",                 group = GRP2, minval = 0, maxval = 59) * MS_IN_MIN
+bool    showInfoBoxInput        = input.bool(true,          "Show time period",        group = GRP2)
+string  infoBoxSizeInput        = input.string("small",     "Size ",    inline = "21", group = GRP2, options = ["tiny", "small", "normal", "large", "huge", "auto"])
+string  infoBoxYPosInput        = input.string("bottom",    "↕",        inline = "21", group = GRP2, options = ["top", "middle", "bottom"])
+string  infoBoxXPosInput        = input.string("left",      "↔",        inline = "21", group = GRP2, options = ["left", "center", "right"])
+color   infoBox
